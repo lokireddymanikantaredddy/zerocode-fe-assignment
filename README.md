@@ -27,18 +27,18 @@ graph TD;
     B --> D[Contexts];
     B --> E[Services];
     
-    C -->|UI Elements| C1[ChatPage];
-    C -->|UI Elements| C2[LoginPage];
-    C -->|UI Elements| C3[AnalyticsDashboard];
-    C -->|Reusable| C4[ChatMessage];
-    C -->|Reusable| C5[ChatInput];
+    C --> C1[ChatPage]
+    C --> C2[LoginPage]
+    C --> C3[AnalyticsDashboard]
+    C --> C4[ChatMessage]
+    C --> C5[ChatInput]
     
-    D -->|State Management| D1[AuthContext];
-    D -->|State Management| D2[ChatContext];
-    D -->|State Management| D3[ThemeContext];
+    D --> D1[AuthContext]
+    D --> D2[ChatContext]
+    D --> D3[ThemeContext]
     
-    E -->|API Integration| E1[OpenRouter AI];
-    E -->|Data Handling| E2[Analytics];
+    E --> E1[OpenRouter Service]
+    E --> E2[Analytics & Storage]
 ```
 
 ## 🚀 Quick Start
@@ -167,6 +167,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📸 Screenshots
 
+### Login page
+
+![login](public/login.png)
+
+### Register page
+
+![register](public/register.png)
+
+### main page
+![main-page](public/main-page.png)
+
 ### Chat Interface
 ![Chat Interface](public/chat-interface.png)
 
@@ -178,3 +189,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Dark Mode
 ![Dark Mode](public/dark-mode.png)
+
+### demo
+![demo](public/demo.mp4)
