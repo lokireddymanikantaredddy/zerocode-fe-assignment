@@ -1,10 +1,28 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Message, ChatHistory, ChatContextType } from '@/types';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import jsPDF from 'jspdf';
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+// Local Storage Keys
+const STORAGE_KEYS = {
+  MESSAGES: 'chat_messages',
+  HISTORIES: 'chat_histories',
+  CURRENT_CHAT: 'current_chat_id'
+};
+
+// Load data from localStorage
+const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (!stored) return defaultValue;
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error(`Error loading ${key} from localStorage:`, error);
+    return defaultValue;
+  }
+};
 
 export const useChat = () => {
   const context = useContext(ChatContext);
@@ -19,10 +37,63 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  // Initialize state from localStorage
+  const [messages, setMessages] = useState<Message[]>(() => 
+    loadFromStorage(STORAGE_KEYS.MESSAGES, []).map(msg => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp) // Convert timestamp string back to Date
+    }))
+  );
+  
+  const [chatHistories, setChatHistories] = useState<ChatHistory[]>(() =>
+    loadFromStorage(STORAGE_KEYS.HISTORIES, []).map(chat => ({
+      ...chat,
+      createdAt: new Date(chat.createdAt),
+      updatedAt: new Date(chat.updatedAt),
+      messages: chat.messages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }))
+    }))
+  );
+  
+  const [currentChatId, setCurrentChatId] = useState<string | null>(() =>
+    loadFromStorage(STORAGE_KEYS.CURRENT_CHAT, null)
+  );
+  
   const [isLoading, setIsLoading] = useState(false);
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify(chatHistories));
+  }, [chatHistories]);
+
+  useEffect(() => {
+    if (currentChatId) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_CHAT, currentChatId);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_CHAT);
+    }
+  }, [currentChatId]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('ChatContext initialized');
+    console.log('Initial messages:', messages);
+    console.log('Initial chat histories:', chatHistories);
+  }, []);
+
+  useEffect(() => {
+    console.log('Messages updated:', messages);
+  }, [messages]);
+
+  useEffect(() => {
+    console.log('Chat histories updated:', chatHistories);
+  }, [chatHistories]);
 
   const simulateOpenAIResponse = async (userMessage: string): Promise<string> => {
     // Mock OpenAI API response
@@ -97,6 +168,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const startNewChat = () => {
     setMessages([]);
     setCurrentChatId(null);
+    localStorage.removeItem(STORAGE_KEYS.MESSAGES);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_CHAT);
   };
 
   const loadChat = (chatId: string) => {
@@ -104,11 +177,18 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     if (chat) {
       setMessages(chat.messages);
       setCurrentChatId(chatId);
+      localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(chat.messages));
+      localStorage.setItem(STORAGE_KEYS.CURRENT_CHAT, chatId);
     }
   };
 
   const deleteChat = (chatId: string) => {
-    setChatHistories(prev => prev.filter(chat => chat.id !== chatId));
+    setChatHistories(prev => {
+      const newHistories = prev.filter(chat => chat.id !== chatId);
+      localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify(newHistories));
+      return newHistories;
+    });
+    
     if (currentChatId === chatId) {
       startNewChat();
     }

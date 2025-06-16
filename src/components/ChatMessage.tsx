@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Message } from '@/types';
@@ -17,18 +16,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className={`flex gap-2 px-3 py-2 ${
-        isUser ? 'bg-primary/5 ml-8' : 'bg-muted/30 mr-8'
+      className={`flex gap-3 px-4 py-3 rounded-lg max-w-[85%] w-fit ${
+        isUser ? 'bg-primary/5 ml-auto' : 'bg-muted/30 mr-auto'
       }`}
     >
-      <Avatar className="h-6 w-6 shrink-0">
-        <AvatarFallback className={`${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'} text-xs`}>
-          {isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
-        </AvatarFallback>
-      </Avatar>
+      {!isUser && (
+        <Avatar className="h-6 w-6 shrink-0">
+          <AvatarFallback className="bg-muted text-xs">
+            <Bot className="h-3 w-3" />
+          </AvatarFallback>
+        </Avatar>
+      )}
       
-      <div className="flex-1 space-y-1">
-        <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
           <span className="text-xs font-medium">
             {isUser ? 'You' : 'AI'}
           </span>
@@ -37,7 +38,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           </span>
         </div>
         
-        <div className="text-sm leading-relaxed">
+        <div className="text-sm leading-relaxed break-words">
           {message.isStreaming ? (
             <div className="flex items-center gap-1">
               <span>{message.content}</span>
@@ -52,6 +53,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           )}
         </div>
       </div>
+
+      {isUser && (
+        <Avatar className="h-6 w-6 shrink-0">
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+            <User className="h-3 w-3" />
+          </AvatarFallback>
+        </Avatar>
+      )}
     </motion.div>
   );
 };

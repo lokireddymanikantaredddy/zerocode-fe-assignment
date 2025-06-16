@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useChat } from '@/contexts/ChatContext';
@@ -14,8 +13,25 @@ import { Menu, BarChart3, MessageSquare } from 'lucide-react';
 const ChatPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
+  const [isMobile, setIsMobile] = useState(false);
   const { messages, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Handle window resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    // Check initially
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,15 +52,15 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-background via-background/95 to-muted/20">
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <div className="hidden lg:block relative z-10">
         <Sidebar isOpen={true} onClose={() => {}} />
       </div>
       
       {/* Mobile Sidebar */}
       {window.innerWidth < 1024 && (
-  <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-)}
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 relative z-0">
@@ -64,8 +80,8 @@ const ChatPage: React.FC = () => {
               <h1 className="text-xl font-semibold">ZeroCode AI Chat</h1>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[200px]">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="chat" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Chat
@@ -80,12 +96,20 @@ const ChatPage: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          <Tabs value={activeTab} className="h-full">
-            <TabsContent value="chat" className="h-full m-0 flex flex-col">
+        <div className="flex-1 overflow-hidden relative">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab} 
+            className="h-full flex flex-col"
+            defaultValue="chat"
+          >
+            <TabsContent 
+              value="chat" 
+              className="flex-1 flex flex-col data-[state=active]:flex data-[state=inactive]:hidden h-[calc(100vh-8rem)]"
+            >
               {/* Chat Messages */}
-              <ScrollArea className="flex-1 p-4">
-                <div className="max-w-4xl mx-auto space-y-4">
+              <ScrollArea className="flex-1 p-4 overflow-y-auto">
+                <div className="max-w-4xl mx-auto space-y-4 pb-4">
                   {messages.length === 0 ? (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -167,18 +191,25 @@ const ChatPage: React.FC = () => {
               </ScrollArea>
 
               {/* Chat Input */}
-              <ChatInput />
+              <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <ChatInput />
+              </div>
             </TabsContent>
 
-            <TabsContent value="analytics" className="h-full m-0 p-6 overflow-auto">
-              <div className="max-w-6xl mx-auto">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-2">Analytics Dashboard</h2>
-                  <p className="text-muted-foreground">
-                    Track your chat activity and AI interaction statistics
-                  </p>
+            <TabsContent 
+              value="analytics" 
+              className="absolute inset-0 bg-background flex flex-col data-[state=active]:flex data-[state=inactive]:hidden"
+            >
+              <div className="flex-1 overflow-auto p-6">
+                <div className="max-w-6xl mx-auto w-full">
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold mb-2">Analytics Dashboard</h2>
+                    <p className="text-muted-foreground">
+                      Track your chat activity and AI interaction statistics
+                    </p>
+                  </div>
+                  <AnalyticsDashboard />
                 </div>
-                <AnalyticsDashboard />
               </div>
             </TabsContent>
           </Tabs>
