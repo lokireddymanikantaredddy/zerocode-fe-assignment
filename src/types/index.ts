@@ -1,3 +1,4 @@
+import { ChatMessage } from './chat';
 
 export interface User {
   id: string;
@@ -5,18 +6,14 @@ export interface User {
   name: string;
 }
 
-export interface Message {
-  id: string;
-  content: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-  isStreaming?: boolean;
+export interface Message extends ChatMessage {
+  sender: 'user' | 'bot';  // For backward compatibility
 }
 
 export interface ChatHistory {
   id: string;
   title: string;
-  messages: Message[];
+  messages: ChatMessage[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,15 +27,17 @@ export interface AuthContextType {
 }
 
 export interface ChatContextType {
-  messages: Message[];
+  messages: ChatMessage[];
   chatHistories: ChatHistory[];
   currentChatId: string | null;
-  sendMessage: (content: string) => Promise<void>;
   isLoading: boolean;
+  error: string | null;
+  sendMessage: (content: string) => Promise<void>;
   startNewChat: () => void;
   loadChat: (chatId: string) => void;
   deleteChat: (chatId: string) => void;
   exportChat: (format: 'txt' | 'pdf') => void;
+  clearMessages: () => void;
 }
 
 export interface PromptTemplate {

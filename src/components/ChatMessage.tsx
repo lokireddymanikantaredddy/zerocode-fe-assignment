@@ -1,15 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Message } from '@/types';
+import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { User, Bot } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface ChatMessageProps {
-  message: Message;
+  message: ChatMessageType;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const isUser = message.sender === 'user';
+  const isUser = message.role === 'user';
 
   return (
     <motion.div
@@ -34,23 +34,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             {isUser ? 'You' : 'AI'}
           </span>
           <span className="text-xs text-muted-foreground">
-            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
         
         <div className="text-sm leading-relaxed break-words">
-          {message.isStreaming ? (
-            <div className="flex items-center gap-1">
-              <span>{message.content}</span>
-              <motion.div
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-                className="w-1 h-3 bg-primary rounded"
-              />
-            </div>
-          ) : (
-            message.content
-          )}
+          {message.content}
         </div>
       </div>
 

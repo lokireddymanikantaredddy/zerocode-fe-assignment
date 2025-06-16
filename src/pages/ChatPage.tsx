@@ -39,14 +39,19 @@ const ChatPage: React.FC = () => {
 
   // Handle suggestion clicks
   useEffect(() => {
-    const handleSuggestion = (event: any) => {
-      // Dispatch to ChatInput
-      window.dispatchEvent(new CustomEvent('selectSuggestion', { detail: event.detail }));
+    const handleSuggestion = (event: CustomEvent) => {
+      if (event.type === 'selectSuggestion') {
+        const chatInput = document.querySelector<HTMLTextAreaElement>('#chat-input');
+        if (chatInput) {
+          chatInput.value = event.detail;
+          chatInput.focus();
+        }
+      }
     };
 
-    window.addEventListener('selectSuggestion', handleSuggestion);
+    window.addEventListener('selectSuggestion', handleSuggestion as EventListener);
     return () => {
-      window.removeEventListener('selectSuggestion', handleSuggestion);
+      window.removeEventListener('selectSuggestion', handleSuggestion as EventListener);
     };
   }, []);
 

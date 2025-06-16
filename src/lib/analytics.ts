@@ -1,4 +1,5 @@
-import { Message, ChatHistory } from '@/types';
+import { ChatMessage } from '@/types/chat';
+import { ChatHistory } from '@/types';
 
 interface AnalyticsData {
   totalMessages: number;
@@ -12,20 +13,20 @@ interface AnalyticsData {
 
 export function calculateAnalytics(
   chatHistories: ChatHistory[],
-  currentMessages: Message[]
+  currentMessages: ChatMessage[]
 ): AnalyticsData {
-  // Ensure dates are properly converted
+  // Process messages with numeric timestamps
   const processedHistories = chatHistories.map(chat => ({
     ...chat,
     messages: chat.messages.map(msg => ({
       ...msg,
-      timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
+      timestamp: typeof msg.timestamp === 'number' ? msg.timestamp : Number(msg.timestamp)
     }))
   }));
 
   const processedMessages = currentMessages.map(msg => ({
     ...msg,
-    timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
+    timestamp: typeof msg.timestamp === 'number' ? msg.timestamp : Number(msg.timestamp)
   }));
 
   // Calculate total messages including current chat
@@ -53,14 +54,14 @@ export function calculateAnalytics(
       return (
         sum +
         chat.messages.filter(
-          msg => msg.timestamp.toISOString().split('T')[0] === date
+          msg => new Date(msg.timestamp).toISOString().split('T')[0] === date
         ).length
       );
     }, 0);
 
     // Add current chat messages if they're from today
     const currentCount = processedMessages.filter(
-      msg => msg.timestamp.toISOString().split('T')[0] === date
+      msg => new Date(msg.timestamp).toISOString().split('T')[0] === date
     ).length;
 
     return {
@@ -75,23 +76,23 @@ export function calculateAnalytics(
     ...processedMessages
   ];
   
-  const userMessages = allMessages.filter(msg => msg.sender === 'user').length;
-  const botMessages = allMessages.filter(msg => msg.sender === 'bot').length;
+  const userMessages = allMessages.filter(msg => msg.role === 'user').length;
+  const assistantMessages = allMessages.filter(msg => msg.role === 'assistant').length;
 
   const messageTypeData = [
     { name: 'User Messages', value: userMessages, color: 'hsl(var(--primary))' },
-    { name: 'AI Responses', value: botMessages, color: 'hsl(var(--muted-foreground))' }
+    { name: 'AI Responses', value: assistantMessages, color: 'hsl(var(--muted-foreground))' }
   ];
 
   // Calculate response times
   const responseTimes = new Map<string, number[]>();
   
   allMessages.forEach((msg, index, array) => {
-    if (msg.sender === 'user' && index < array.length - 1) {
+    if (msg.role === 'user' && index < array.length - 1) {
       const nextMsg = array[index + 1];
-      if (nextMsg.sender === 'bot') {
-        const responseTime = nextMsg.timestamp.getTime() - msg.timestamp.getTime();
-        const date = msg.timestamp.toLocaleDateString('en-US', { weekday: 'short' });
+      if (nextMsg.role === 'assistant') {
+        const responseTime = nextMsg.timestamp - msg.timestamp;
+        const date = new Date(msg.timestamp).toLocaleDateString('en-US', { weekday: 'short' });
         
         if (!responseTimes.has(date)) {
           responseTimes.set(date, []);

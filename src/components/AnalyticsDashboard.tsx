@@ -17,12 +17,12 @@ const AnalyticsDashboard: React.FC = () => {
     
     // Check data validity
     const validMessages = messages?.every(msg => 
-      msg.id && msg.content && msg.sender && msg.timestamp instanceof Date
+      msg.id && msg.content && msg.role && typeof msg.timestamp === 'number'
     );
     
     const validHistories = chatHistories?.every(chat => 
       chat.id && chat.messages?.every(msg => 
-        msg.id && msg.content && msg.sender && msg.timestamp instanceof Date
+        msg.id && msg.content && msg.role && typeof msg.timestamp === 'number'
       )
     );
     
@@ -33,7 +33,7 @@ const AnalyticsDashboard: React.FC = () => {
     if (!validMessages) {
       console.warn('Invalid messages found:', 
         messages?.filter(msg => 
-          !msg.id || !msg.content || !msg.sender || !(msg.timestamp instanceof Date)
+          !msg.id || !msg.content || !msg.role || typeof msg.timestamp !== 'number'
         )
       );
     }
@@ -42,7 +42,7 @@ const AnalyticsDashboard: React.FC = () => {
       console.warn('Invalid histories found:', 
         chatHistories?.filter(chat => 
           !chat.id || !chat.messages?.every(msg => 
-            msg.id && msg.content && msg.sender && msg.timestamp instanceof Date
+            msg.id && msg.content && msg.role && typeof msg.timestamp === 'number'
           )
         )
       );

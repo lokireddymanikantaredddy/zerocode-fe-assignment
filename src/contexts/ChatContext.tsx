@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { Message, ChatHistory, ChatContextType } from '@/types';
 import { toast } from '@/components/ui/sonner';
 import jsPDF from 'jspdf';
+import { nanoid } from 'nanoid';
+import { generateChatResponse } from '@/services/ai';
+import type { ChatMessage, ChatState } from '@/types/chat';
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
@@ -37,14 +40,13 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
+  const [state, setState] = useState<ChatState>({
+    messages: [],
+    isLoading: false,
+    error: null,
+  });
+
   // Initialize state from localStorage
-  const [messages, setMessages] = useState<Message[]>(() => 
-    loadFromStorage(STORAGE_KEYS.MESSAGES, []).map(msg => ({
-      ...msg,
-      timestamp: new Date(msg.timestamp) // Convert timestamp string back to Date
-    }))
-  );
-  
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>(() =>
     loadFromStorage(STORAGE_KEYS.HISTORIES, []).map(chat => ({
       ...chat,
@@ -60,13 +62,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(() =>
     loadFromStorage(STORAGE_KEYS.CURRENT_CHAT, null)
   );
-  
-  const [isLoading, setIsLoading] = useState(false);
 
   // Save to localStorage whenever data changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(messages));
-  }, [messages]);
+    localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(state.messages));
+  }, [state.messages]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify(chatHistories));
@@ -83,60 +83,53 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   // Debug logging
   useEffect(() => {
     console.log('ChatContext initialized');
-    console.log('Initial messages:', messages);
+    console.log('Initial messages:', state.messages);
     console.log('Initial chat histories:', chatHistories);
   }, []);
 
   useEffect(() => {
-    console.log('Messages updated:', messages);
-  }, [messages]);
+    console.log('Messages updated:', state.messages);
+  }, [state.messages]);
 
   useEffect(() => {
     console.log('Chat histories updated:', chatHistories);
   }, [chatHistories]);
 
-  const simulateOpenAIResponse = async (userMessage: string): Promise<string> => {
-    // Mock OpenAI API response
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-    
-    const responses = [
-      "I understand your question about " + userMessage.slice(0, 20) + "... Let me help you with that.",
-      "That's an interesting point. Here's what I think about it...",
-      "Based on your input, I'd suggest considering the following approach...",
-      "Great question! Let me break this down for you step by step.",
-      "I see what you're asking. Here's a comprehensive response to help you..."
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
-
-  const sendMessage = async (content: string) => {
+  const sendMessage = useCallback(async (content: string) => {
     if (!content.trim()) return;
-    
-    const userMessage: Message = {
-      id: Date.now().toString(),
+
+    const userMessage: ChatMessage = {
+      id: nanoid(),
       content: content.trim(),
-      sender: 'user',
-      timestamp: new Date()
+      role: 'user',
+      timestamp: Date.now(),
     };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    
+
+    setState(prev => ({
+      ...prev,
+      messages: [...prev.messages, userMessage],
+      isLoading: true,
+      error: null,
+    }));
+
     try {
-      const botResponse = await simulateOpenAIResponse(content);
+      const response = await generateChatResponse([...state.messages, userMessage]);
       
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: botResponse,
-        sender: 'bot',
-        timestamp: new Date()
+      const assistantMessage: ChatMessage = {
+        id: nanoid(),
+        content: response,
+        role: 'assistant',
+        timestamp: Date.now(),
       };
-      
-      setMessages(prev => [...prev, botMessage]);
-      
+
+      setState(prev => ({
+        ...prev,
+        messages: [...prev.messages, assistantMessage],
+        isLoading: false,
+      }));
+
       // Update or create chat history
-      const updatedMessages = [userMessage, botMessage];
+      const updatedMessages = [userMessage, assistantMessage];
       if (currentChatId) {
         setChatHistories(prev => 
           prev.map(chat => 
@@ -150,7 +143,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         const newChat: ChatHistory = {
           id: newChatId,
           title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
-          messages: [...messages, ...updatedMessages],
+          messages: [...state.messages, ...updatedMessages],
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -159,14 +152,30 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       }
       
     } catch (error) {
-      toast.error('Failed to send message');
-    } finally {
-      setIsLoading(false);
+      console.error('Error in chat:', error);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to generate response. Please try again.',
+      }));
+      toast.error('Failed to generate response. Please try again.');
     }
-  };
+  }, [state.messages]);
+
+  const clearMessages = useCallback(() => {
+    setState({
+      messages: [],
+      isLoading: false,
+      error: null,
+    });
+  }, []);
 
   const startNewChat = () => {
-    setMessages([]);
+    setState({
+      messages: [],
+      isLoading: false,
+      error: null,
+    });
     setCurrentChatId(null);
     localStorage.removeItem(STORAGE_KEYS.MESSAGES);
     localStorage.removeItem(STORAGE_KEYS.CURRENT_CHAT);
@@ -175,7 +184,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const loadChat = (chatId: string) => {
     const chat = chatHistories.find(c => c.id === chatId);
     if (chat) {
-      setMessages(chat.messages);
+      setState({
+        messages: chat.messages,
+        isLoading: false,
+        error: null,
+      });
       setCurrentChatId(chatId);
       localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(chat.messages));
       localStorage.setItem(STORAGE_KEYS.CURRENT_CHAT, chatId);
@@ -196,13 +209,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   };
 
   const exportChat = (format: 'txt' | 'pdf') => {
-    if (messages.length === 0) {
+    if (state.messages.length === 0) {
       toast.error('No messages to export');
       return;
     }
 
-    const chatContent = messages.map(msg => 
-      `[${msg.timestamp.toLocaleString()}] ${msg.sender.toUpperCase()}: ${msg.content}`
+    const chatContent = state.messages.map(msg => 
+      `[${msg.timestamp.toLocaleString()}] ${msg.role.toUpperCase()}: ${msg.content}`
     ).join('\n\n');
 
     if (format === 'txt') {
@@ -225,15 +238,17 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
   return (
     <ChatContext.Provider value={{
-      messages,
+      messages: state.messages,
       chatHistories,
       currentChatId,
       sendMessage,
-      isLoading,
+      isLoading: state.isLoading,
+      error: state.error,
       startNewChat,
       loadChat,
       deleteChat,
-      exportChat
+      exportChat,
+      clearMessages
     }}>
       {children}
     </ChatContext.Provider>
