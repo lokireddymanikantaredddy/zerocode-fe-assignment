@@ -14,26 +14,26 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={`flex gap-4 p-4 rounded-lg ${
-        isUser ? 'bg-primary/5 ml-12' : 'bg-muted/50 mr-12'
+      transition={{ duration: 0.2 }}
+      className={`flex gap-2 px-3 py-2 ${
+        isUser ? 'bg-primary/5 ml-8' : 'bg-muted/30 mr-8'
       }`}
     >
-      <Avatar className="h-8 w-8 shrink-0">
-        <AvatarFallback className={isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'}>
-          {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+      <Avatar className="h-6 w-6 shrink-0">
+        <AvatarFallback className={`${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'} text-xs`}>
+          {isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
         </AvatarFallback>
       </Avatar>
       
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold">
-            {isUser ? 'You' : 'AI Assistant'}
+          <span className="text-xs font-medium">
+            {isUser ? 'You' : 'AI'}
           </span>
           <span className="text-xs text-muted-foreground">
-            {message.timestamp.toLocaleTimeString()}
+            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
         
@@ -44,7 +44,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               <motion.div
                 animate={{ opacity: [1, 0, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
-                className="w-2 h-4 bg-primary rounded"
+                className="w-1 h-3 bg-primary rounded"
               />
             </div>
           ) : (

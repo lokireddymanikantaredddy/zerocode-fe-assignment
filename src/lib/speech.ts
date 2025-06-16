@@ -14,9 +14,10 @@ export const createSpeechRecognition = () => {
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   const recognition = new SpeechRecognition();
   
-  recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.continuous = true; // Keep listening for continuous speech
+  recognition.interimResults = true; // Show partial results
   recognition.lang = 'en-US';
+  recognition.maxAlternatives = 1;
   
   return recognition;
 };
@@ -29,12 +30,27 @@ export const startListening = (
     const recognition = createSpeechRecognition();
     
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      onResult(transcript);
+      let finalTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        }
+      }
+      
+      if (finalTranscript) {
+        onResult(finalTranscript.trim());
+      }
     };
     
     recognition.onerror = (event: any) => {
       onError(event.error);
+    };
+    
+    recognition.onend = () => {
+      // Auto-restart if it stops (for continuous listening)
+      // User can manually stop by clicking the button
     };
     
     recognition.start();

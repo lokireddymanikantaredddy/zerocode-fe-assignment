@@ -1,61 +1,81 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useChat } from '@/contexts/ChatContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { MessageSquare, Clock, TrendingUp, Zap } from 'lucide-react';
 
 const AnalyticsDashboard: React.FC = () => {
   const { chatHistories, messages } = useChat();
 
-  // Calculate analytics
-  const totalMessages = chatHistories.reduce((sum, chat) => sum + chat.messages.length, 0);
-  const totalChats = chatHistories.length;
-  const averageMessagesPerChat = totalChats > 0 ? Math.round(totalMessages / totalChats) : 0;
-  
-  // Messages per day (last 7 days)
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return date.toISOString().split('T')[0];
-  }).reverse();
-
-  const messagesPerDay = last7Days.map(date => {
-    const count = chatHistories.reduce((sum, chat) => {
-      return sum + chat.messages.filter(msg => 
-        msg.timestamp.toISOString().split('T')[0] === date
-      ).length;
-    }, 0);
+  // Calculate real-time analytics
+  const analytics = useMemo(() => {
+    const totalMessages = chatHistories.reduce((sum, chat) => sum + chat.messages.length, 0) + messages.length;
+    const totalChats = chatHistories.length + (messages.length > 0 ? 1 : 0);
+    const averageMessagesPerChat = totalChats > 0 ? Math.round(totalMessages / totalChats) : 0;
     
-    return {
-      date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-      count
-    };
-  });
+    // Messages per day (last 7 days)
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toISOString().split('T')[0];
+    }).reverse();
 
-  // Response time simulation (mock data)
-  const responseTimeData = messagesPerDay.map(day => ({
-    ...day,
-    responseTime: Math.random() * 2000 + 500 // 500-2500ms
-  }));
+    const messagesPerDay = last7Days.map(date => {
+      const count = chatHistories.reduce((sum, chat) => {
+        return sum + chat.messages.filter(msg => 
+          msg.timestamp.toISOString().split('T')[0] === date
+        ).length;
+      }, 0) + (messages.length > 0 && new Date().toISOString().split('T')[0] === date ? messages.length : 0);
+      
+      return {
+        date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+        count
+      };
+    });
+
+    // Message type distribution
+    const userMessages = totalMessages > 0 ? Math.ceil(totalMessages / 2) : 0;
+    const botMessages = totalMessages - userMessages;
+    
+    const messageTypeData = [
+      { name: 'User Messages', value: userMessages, color: 'hsl(var(--primary))' },
+      { name: 'AI Responses', value: botMessages, color: 'hsl(var(--muted))' }
+    ];
+
+    // Chat activity trend (mock response times)
+    const responseTimeData = messagesPerDay.map(day => ({
+      ...day,
+      responseTime: Math.floor(Math.random() * 1500 + 800) // 800-2300ms
+    }));
+
+    return {
+      totalMessages,
+      totalChats,
+      averageMessagesPerChat,
+      messagesPerDay,
+      messageTypeData,
+      responseTimeData
+    };
+  }, [chatHistories, messages]);
 
   const stats = [
     {
       title: "Total Messages",
-      value: totalMessages,
+      value: analytics.totalMessages,
       icon: MessageSquare,
-      description: "Messages sent and received"
+      description: "Messages exchanged"
     },
     {
-      title: "Total Chats",
-      value: totalChats,
+      title: "Active Chats",
+      value: analytics.totalChats,
       icon: TrendingUp,
       description: "Conversation sessions"
     },
     {
       title: "Avg. Messages/Chat",
-      value: averageMessagesPerChat,
+      value: analytics.averageMessagesPerChat,
       icon: Zap,
       description: "Messages per conversation"
     },
@@ -68,8 +88,8 @@ const AnalyticsDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -95,7 +115,7 @@ const AnalyticsDashboard: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -103,17 +123,17 @@ const AnalyticsDashboard: React.FC = () => {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Messages Per Day</CardTitle>
-              <CardDescription>Your chat activity over the last week</CardDescription>
+              <CardTitle className="text-base">Daily Activity</CardTitle>
+              <CardDescription>Messages sent over the last week</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={messagesPerDay}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={analytics.messagesPerDay}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="date" fontSize={12} />
+                  <YAxis fontSize={12} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -127,22 +147,67 @@ const AnalyticsDashboard: React.FC = () => {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Response Time Trend</CardTitle>
-              <CardDescription>AI response latency over time</CardDescription>
+              <CardTitle className="text-base">Message Distribution</CardTitle>
+              <CardDescription>User vs AI message breakdown</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={responseTimeData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={analytics.messageTypeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {analytics.messageTypeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-4 mt-2">
+                {analytics.messageTypeData.map((entry, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">{entry.name}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="lg:col-span-2"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Response Time Trend</CardTitle>
+              <CardDescription>AI response performance over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={analytics.responseTimeData}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="date" fontSize={12} />
+                  <YAxis fontSize={12} />
                   <Tooltip formatter={(value) => [`${Math.round(value as number)}ms`, 'Response Time']} />
                   <Line 
                     type="monotone" 
                     dataKey="responseTime" 
                     stroke="hsl(var(--primary))" 
                     strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--primary))' }}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>

@@ -19,6 +19,19 @@ const ChatInput: React.FC = () => {
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
+
+    // Listen for prompt template events
+    const handlePromptTemplate = (event: CustomEvent) => {
+      setInput(event.detail);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    };
+
+    window.addEventListener('setPromptTemplate', handlePromptTemplate as EventListener);
+    return () => {
+      window.removeEventListener('setPromptTemplate', handlePromptTemplate as EventListener);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +65,7 @@ const ChatInput: React.FC = () => {
       const recognition = startListening(
         (transcript) => {
           setInput(prev => prev + transcript);
-          setIsListening(false);
+          // Don't automatically stop listening, let user control it
           toast.success('Speech recognized!');
         },
         (error) => {
@@ -64,7 +77,7 @@ const ChatInput: React.FC = () => {
       if (recognition) {
         recognitionRef.current = recognition;
         setIsListening(true);
-        toast.info('Listening...');
+        toast.info('Listening... Click microphone again to stop');
       }
     }
   };
@@ -73,7 +86,7 @@ const ChatInput: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="border-t border-border bg-background p-4"
+      className="border-t border-border bg-background p-3"
     >
       <form onSubmit={handleSubmit} className="flex gap-2 max-w-4xl mx-auto">
         <div className="flex-1 relative">
@@ -83,7 +96,7 @@ const ChatInput: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="min-h-[60px] max-h-32 resize-none pr-12"
+            className="min-h-[50px] max-h-32 resize-none pr-12"
             disabled={isLoading}
           />
           
@@ -92,14 +105,14 @@ const ChatInput: React.FC = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-2 h-8 w-8"
+              className="absolute right-2 top-2 h-6 w-6"
               onClick={toggleListening}
               disabled={isLoading}
             >
               {isListening ? (
-                <MicOff className="h-4 w-4 text-red-500" />
+                <MicOff className="h-3 w-3 text-red-500" />
               ) : (
-                <Mic className="h-4 w-4" />
+                <Mic className="h-3 w-3" />
               )}
             </Button>
           )}
@@ -108,16 +121,16 @@ const ChatInput: React.FC = () => {
         <Button
           type="submit"
           disabled={!input.trim() || isLoading}
-          className="h-[60px] px-6"
+          className="h-[50px] px-4"
         >
           {isLoading ? (
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+              className="h-3 w-3 border-2 border-white border-t-transparent rounded-full"
             />
           ) : (
-            <Send className="h-4 w-4" />
+            <Send className="h-3 w-3" />
           )}
         </Button>
       </form>
