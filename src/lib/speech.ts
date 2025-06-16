@@ -41,7 +41,7 @@ export const startListening = (
         if (onSilence) {
           onSilence();
         }
-      }, 3000); // 3 seconds of silence
+      }, 6000); // 3 seconds of silence
     };
     
     recognition.onresult = (event: any) => {
