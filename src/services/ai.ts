@@ -31,7 +31,7 @@ export const generateChatResponse = async (messages: ChatMessage[]): Promise<str
       body: JSON.stringify({
         model: AI_CONFIG.model,
         messages: formattedMessages,
-        temperature: 0.7,
+        temperature: 0.8, // Slightly higher temperature for more creative responses
         max_tokens: 2000,
         stream: false
       })
