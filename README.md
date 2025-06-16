@@ -2,6 +2,16 @@
 
 A modern, feature-rich AI chat application built with React, TypeScript, and Tailwind CSS. Powered by OpenRouter AI for intelligent conversations.
 
+## 🌐 Live Demo
+
+Try out the application: [ZeroCode AI Chat Hub](https://zerocode-fe.netlify.app/)
+
+### Demo Credentials
+```
+Email: demo@example.com
+Password: password
+```
+
 ![ZeroCode AI Chat Hub Demo](public/demo.gif)
 
 ## ✨ Features
