@@ -21,16 +21,27 @@ const ChatInput: React.FC = () => {
     }
 
     // Listen for prompt template events
-    const handlePromptTemplate = (event: CustomEvent) => {
+    const handlePromptTemplate = (event: any) => {
       setInput(event.detail);
       if (textareaRef.current) {
         textareaRef.current.focus();
       }
     };
 
-    window.addEventListener('setPromptTemplate', handlePromptTemplate as EventListener);
+    // Listen for suggestion events
+    const handleSuggestion = (event: any) => {
+      setInput(event.detail);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    };
+
+    window.addEventListener('setPromptTemplate', handlePromptTemplate);
+    window.addEventListener('selectSuggestion', handleSuggestion);
+    
     return () => {
-      window.removeEventListener('setPromptTemplate', handlePromptTemplate as EventListener);
+      window.removeEventListener('setPromptTemplate', handlePromptTemplate);
+      window.removeEventListener('selectSuggestion', handleSuggestion);
     };
   }, []);
 
@@ -64,20 +75,23 @@ const ChatInput: React.FC = () => {
     } else {
       const recognition = startListening(
         (transcript) => {
-          setInput(prev => prev + transcript);
-          // Don't automatically stop listening, let user control it
+          setInput(prev => prev + transcript + ' ');
           toast.success('Speech recognized!');
         },
         (error) => {
           setIsListening(false);
           toast.error('Speech recognition error: ' + error);
+        },
+        () => {
+          setIsListening(false);
+          toast.info('Voice input stopped due to silence');
         }
       );
       
       if (recognition) {
         recognitionRef.current = recognition;
         setIsListening(true);
-        toast.info('Listening... Click microphone again to stop');
+        toast.info('Listening... Will stop after 3 seconds of silence');
       }
     }
   };

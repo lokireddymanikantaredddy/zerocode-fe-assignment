@@ -24,18 +24,40 @@ export const createSpeechRecognition = () => {
 
 export const startListening = (
   onResult: (transcript: string) => void,
-  onError: (error: string) => void
+  onError: (error: string) => void,
+  onSilence?: () => void
 ): any => {
   try {
     const recognition = createSpeechRecognition();
+    let silenceTimer: NodeJS.Timeout | null = null;
+    let lastSpeechTime = Date.now();
+    
+    const resetSilenceTimer = () => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
+      silenceTimer = setTimeout(() => {
+        recognition.stop();
+        if (onSilence) {
+          onSilence();
+        }
+      }, 3000); // 3 seconds of silence
+    };
     
     recognition.onresult = (event: any) => {
       let finalTranscript = '';
+      let hasInterimResults = false;
       
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
+          finalTranscript += transcript;
+          lastSpeechTime = Date.now();
+          resetSilenceTimer(); // Reset timer on final results
+        } else {
+          hasInterimResults = true;
+          // Reset timer even on interim results (user is speaking)
+          resetSilenceTimer();
         }
       }
       
@@ -45,15 +67,21 @@ export const startListening = (
     };
     
     recognition.onerror = (event: any) => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
       onError(event.error);
     };
     
     recognition.onend = () => {
-      // Auto-restart if it stops (for continuous listening)
-      // User can manually stop by clicking the button
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
     };
     
     recognition.start();
+    resetSilenceTimer(); // Start the silence timer
+    
     return recognition;
   } catch (error) {
     onError('Speech recognition failed to start');

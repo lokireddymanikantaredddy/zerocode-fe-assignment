@@ -21,10 +21,23 @@ const ChatPage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Handle suggestion clicks
+  useEffect(() => {
+    const handleSuggestion = (event: any) => {
+      // Dispatch to ChatInput
+      window.dispatchEvent(new CustomEvent('selectSuggestion', { detail: event.detail }));
+    };
+
+    window.addEventListener('selectSuggestion', handleSuggestion);
+    return () => {
+      window.removeEventListener('selectSuggestion', handleSuggestion);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-background via-background/95 to-muted/20">
       {/* Sidebar */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block relative z-10">
         <Sidebar isOpen={true} onClose={() => {}} />
       </div>
       
@@ -32,7 +45,7 @@ const ChatPage: React.FC = () => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative z-0">
         {/* Header */}
         <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between p-4">
@@ -98,9 +111,7 @@ const ChatPage: React.FC = () => {
                             size="sm"
                             className="text-sm"
                             onClick={() => {
-                              // This would trigger sending the message
-                              const event = new CustomEvent('selectSuggestion', { detail: suggestion });
-                              window.dispatchEvent(event);
+                              window.dispatchEvent(new CustomEvent('selectSuggestion', { detail: suggestion }));
                             }}
                           >
                             {suggestion}
