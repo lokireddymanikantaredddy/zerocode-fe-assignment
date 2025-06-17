@@ -35,7 +35,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   )
 }
 
-// Toast interface that matches the original Sonner toast
+
 const toast = {
   success: (message: string) => {
     sonnerToast.success(message, {

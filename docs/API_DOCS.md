@@ -153,13 +153,13 @@ const ERROR_CODES = {
 const streamConfig = {
   stream: true,
   onMessage: (message: string) => {
-    // Handle streaming message
+  
   },
   onError: (error: Error) => {
-    // Handle streaming error
+  
   },
   onComplete: () => {
-    // Handle stream completion
+   
   }
 };
 ```
@@ -184,7 +184,7 @@ const streamResponse = async (messages: Message[]) => {
     const { done, value } = await reader!.read();
     if (done) break;
     const chunk = decoder.decode(value);
-    // Process chunk
+   
   }
 };
 ```
@@ -218,26 +218,26 @@ interface WSMessage {
 ### API Key Management
 ```typescript
 const securityConfig = {
-  keyStorage: 'env',  // Never store in client
-  tokenExpiry: 3600,  // 1 hour
-  refreshBuffer: 300  // 5 minutes
+  keyStorage: 'env',  
+  tokenExpiry: 3600,  
+  refreshBuffer: 300 
 };
 ```
 
 ### Request Validation
 ```typescript
 const validateRequest = (req: APIRequest) => {
-  // Validate content
+  
   if (!isValidContent(req.content)) {
     throw new Error('Invalid content');
   }
 
-  // Check token limits
+  
   if (exceedsTokenLimit(req.content)) {
     throw new Error('Token limit exceeded');
   }
 
-  // Validate model availability
+  
   if (!isModelAvailable(req.model)) {
     throw new Error('Model not available');
   }
