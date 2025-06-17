@@ -20,7 +20,7 @@ const ChatInput: React.FC = () => {
       textareaRef.current.focus();
     }
 
-    // Listen for prompt template events
+    
     const handlePromptTemplate = (event: any) => {
       setInput(event.detail);
       if (textareaRef.current) {
@@ -28,7 +28,7 @@ const ChatInput: React.FC = () => {
       }
     };
 
-    // Listen for suggestion events
+    
     const handleSuggestion = (event: any) => {
       setInput(event.detail);
       if (textareaRef.current) {

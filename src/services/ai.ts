@@ -12,7 +12,6 @@ export const generateChatResponse = async (messages: ChatMessage[]): Promise<str
       content: msg.content
     }));
 
-    // Add system message at the start
     formattedMessages.unshift({
       role: 'system',
       content: AI_CONFIG.systemPrompt
@@ -31,7 +30,7 @@ export const generateChatResponse = async (messages: ChatMessage[]): Promise<str
       body: JSON.stringify({
         model: AI_CONFIG.model,
         messages: formattedMessages,
-        temperature: 0.8, // Slightly higher temperature for more creative responses
+        temperature: 0.8, 
         max_tokens: 2000,
         stream: false
       })
@@ -46,7 +45,6 @@ export const generateChatResponse = async (messages: ChatMessage[]): Promise<str
         model: AI_CONFIG.model
       });
 
-      // If model not found, try fallback
       if (response.status === 400 && errorData.error?.message?.includes('not a valid model ID')) {
         console.log('Attempting fallback to GPT-3.5...');
         AI_CONFIG.model = 'openai/gpt-3.5-turbo';
@@ -69,7 +67,6 @@ export const generateChatResponse = async (messages: ChatMessage[]): Promise<str
   }
 };
 
-// Helper function to switch models
 export const switchModel = (modelName: 'gpt-3.5' | 'claude-3' | 'claude-3-sonnet') => {
   const modelMap = {
     'gpt-3.5': 'openai/gpt-3.5-turbo',
@@ -80,7 +77,6 @@ export const switchModel = (modelName: 'gpt-3.5' | 'claude-3' | 'claude-3-sonnet
   console.log('Switched to model:', AI_CONFIG.model);
 };
 
-// Enhanced local response generation
 const generateLocalResponse = (message: string): string => {
   const responses = [
     "I understand your question about " + message.slice(0, 30) + "... Let me help you with that.",

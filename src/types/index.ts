@@ -7,7 +7,7 @@ export interface User {
 }
 
 export interface Message extends ChatMessage {
-  sender: 'user' | 'bot';  // For backward compatibility
+  sender: 'user' | 'bot';  
 }
 
 export interface ChatHistory {

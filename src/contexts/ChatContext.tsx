@@ -8,14 +8,14 @@ import type { ChatMessage, ChatState } from '@/types/chat';
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-// Local Storage Keys
+
 const STORAGE_KEYS = {
   MESSAGES: 'chat_messages',
   HISTORIES: 'chat_histories',
   CURRENT_CHAT: 'current_chat_id'
 };
 
-// Load data from localStorage
+
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
   try {
     const stored = localStorage.getItem(key);
@@ -46,7 +46,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     error: null,
   });
 
-  // Initialize state from localStorage
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>(() =>
     loadFromStorage(STORAGE_KEYS.HISTORIES, []).map(chat => ({
       ...chat,
@@ -63,7 +62,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     loadFromStorage(STORAGE_KEYS.CURRENT_CHAT, null)
   );
 
-  // Save to localStorage whenever data changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(state.messages));
   }, [state.messages]);
@@ -80,7 +78,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     }
   }, [currentChatId]);
 
-  // Debug logging
   useEffect(() => {
     console.log('ChatContext initialized');
     console.log('Initial messages:', state.messages);
@@ -128,7 +125,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         isLoading: false,
       }));
 
-      // Update or create chat history
+    
       const updatedMessages = [userMessage, assistantMessage];
       if (currentChatId) {
         setChatHistories(prev => 

@@ -9,13 +9,13 @@ import { calculateAnalytics } from '@/lib/analytics';
 const AnalyticsDashboard: React.FC = () => {
   const { chatHistories, messages } = useChat();
 
-  // Enhanced debug logging
+  
   useEffect(() => {
     console.log('AnalyticsDashboard mounted');
     console.log('Raw messages:', messages);
     console.log('Raw chat histories:', chatHistories);
     
-    // Check data validity
+    
     const validMessages = messages?.every(msg => 
       msg.id && msg.content && msg.role && typeof msg.timestamp === 'number'
     );
@@ -29,7 +29,7 @@ const AnalyticsDashboard: React.FC = () => {
     console.log('Messages valid?', validMessages);
     console.log('Histories valid?', validHistories);
     
-    // Log any invalid data
+    
     if (!validMessages) {
       console.warn('Invalid messages found:', 
         messages?.filter(msg => 
@@ -49,7 +49,7 @@ const AnalyticsDashboard: React.FC = () => {
     }
   }, [messages, chatHistories]);
 
-  // Calculate real-time analytics with fallback values
+  
   const analytics = useMemo(() => {
     console.log('Calculating analytics...');
     
@@ -76,7 +76,7 @@ const AnalyticsDashboard: React.FC = () => {
     }
   }, [chatHistories, messages]);
 
-  // Early return with loading state if no data
+
   if (!messages?.length && !chatHistories?.length) {
     return (
       <div className="flex items-center justify-center h-[200px]">
@@ -85,7 +85,7 @@ const AnalyticsDashboard: React.FC = () => {
     );
   }
 
-  // Early return with error state if analytics calculation failed
+  
   if (!analytics) {
     return (
       <div className="flex items-center justify-center h-[200px]">
@@ -123,12 +123,12 @@ const AnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 w-full">
-      {/* Debug info */}
+      
       <div className="p-4 bg-muted/10 rounded-lg mb-4">
         <p className="text-sm text-muted-foreground">Debug: Total Messages: {analytics.totalMessages}</p>
       </div>
 
-      {/* Stats Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
           <motion.div
@@ -156,9 +156,9 @@ const AnalyticsDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Charts */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Bar Chart */}
+        
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Daily Activity</CardTitle>
@@ -179,7 +179,7 @@ const AnalyticsDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Pie Chart */}
+        
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Message Distribution</CardTitle>
@@ -220,7 +220,7 @@ const AnalyticsDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Line Chart */}
+      
         <Card className="w-full lg:col-span-2">
           <CardHeader>
             <CardTitle>Response Time Trend</CardTitle>

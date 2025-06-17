@@ -56,7 +56,6 @@ const LoginPage: React.FC = () => {
     try {
       await login(data.email, data.password);
     } catch (error) {
-      // Error handled in AuthContext
     }
   };
 
@@ -64,7 +63,6 @@ const LoginPage: React.FC = () => {
     try {
       await register(data.name, data.email, data.password);
     } catch (error) {
-      // Error handled in AuthContext
     }
   };
 

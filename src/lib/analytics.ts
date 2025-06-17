@@ -15,7 +15,6 @@ export function calculateAnalytics(
   chatHistories: ChatHistory[],
   currentMessages: ChatMessage[]
 ): AnalyticsData {
-  // Process messages with numeric timestamps
   const processedHistories = chatHistories.map(chat => ({
     ...chat,
     messages: chat.messages.map(msg => ({
@@ -29,26 +28,26 @@ export function calculateAnalytics(
     timestamp: typeof msg.timestamp === 'number' ? msg.timestamp : Number(msg.timestamp)
   }));
 
-  // Calculate total messages including current chat
+  
   const totalMessages = processedHistories.reduce(
     (sum, chat) => sum + chat.messages.length,
     0
   ) + processedMessages.length;
 
-  // Calculate total chats
+  
   const totalChats = processedHistories.length + (processedMessages.length > 0 ? 1 : 0);
 
-  // Calculate average messages per chat
+  
   const averageMessagesPerChat = totalChats > 0 ? Math.round(totalMessages / totalChats) : 0;
 
-  // Get last 7 days
+  
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - i);
     return date.toISOString().split('T')[0];
   }).reverse();
 
-  // Calculate messages per day
+  
   const messagesPerDay = last7Days.map(date => {
     const count = processedHistories.reduce((sum, chat) => {
       return (
@@ -59,7 +58,7 @@ export function calculateAnalytics(
       );
     }, 0);
 
-    // Add current chat messages if they're from today
+    
     const currentCount = processedMessages.filter(
       msg => new Date(msg.timestamp).toISOString().split('T')[0] === date
     ).length;
@@ -70,7 +69,7 @@ export function calculateAnalytics(
     };
   });
 
-  // Calculate message type distribution
+  
   const allMessages = [
     ...processedHistories.flatMap(chat => chat.messages),
     ...processedMessages
@@ -84,7 +83,7 @@ export function calculateAnalytics(
     { name: 'AI Responses', value: assistantMessages, color: 'hsl(var(--muted-foreground))' }
   ];
 
-  // Calculate response times
+  
   const responseTimes = new Map<string, number[]>();
   
   allMessages.forEach((msg, index, array) => {
@@ -102,7 +101,7 @@ export function calculateAnalytics(
     }
   });
 
-  // Calculate average response time per day
+  
   const responseTimeData = last7Days.map(date => {
     const shortDate = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
     const times = responseTimes.get(shortDate) || [];
@@ -116,7 +115,7 @@ export function calculateAnalytics(
     };
   });
 
-  // Calculate overall average response time
+  
   const allResponseTimes = Array.from(responseTimes.values()).flat();
   const averageResponseTime = allResponseTimes.length > 0
     ? allResponseTimes.reduce((sum, time) => sum + time, 0) / allResponseTimes.length

@@ -40,7 +40,7 @@ const PromptTemplates: React.FC = () => {
   const { sendMessage } = useChat();
 
   const handleTemplateClick = (content: string) => {
-    // Dispatch a custom event to set the input value
+    
     window.dispatchEvent(new CustomEvent('setPromptTemplate', { detail: content }));
   };
 

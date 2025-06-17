@@ -1,5 +1,5 @@
 
-// Browser Speech Recognition API utility
+
 
 export const isSpeechRecognitionSupported = (): boolean => {
   return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
@@ -10,12 +10,11 @@ export const createSpeechRecognition = () => {
     throw new Error('Speech recognition is not supported in this browser');
   }
 
-  // Use webkitSpeechRecognition for Chrome/Safari or SpeechRecognition for other browsers
+  
   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   const recognition = new SpeechRecognition();
-  
-  recognition.continuous = true; // Keep listening for continuous speech
-  recognition.interimResults = true; // Show partial results
+  recognition.continuous = true; 
+  recognition.interimResults = true; 
   recognition.lang = 'en-US';
   recognition.maxAlternatives = 1;
   
@@ -41,7 +40,7 @@ export const startListening = (
         if (onSilence) {
           onSilence();
         }
-      }, 6000); // 3 seconds of silence
+      }, 7000); 
     };
     
     recognition.onresult = (event: any) => {
@@ -53,10 +52,10 @@ export const startListening = (
         if (event.results[i].isFinal) {
           finalTranscript += transcript;
           lastSpeechTime = Date.now();
-          resetSilenceTimer(); // Reset timer on final results
+          resetSilenceTimer(); 
         } else {
           hasInterimResults = true;
-          // Reset timer even on interim results (user is speaking)
+          
           resetSilenceTimer();
         }
       }
@@ -80,7 +79,7 @@ export const startListening = (
     };
     
     recognition.start();
-    resetSilenceTimer(); // Start the silence timer
+    resetSilenceTimer(); 
     
     return recognition;
   } catch (error) {
